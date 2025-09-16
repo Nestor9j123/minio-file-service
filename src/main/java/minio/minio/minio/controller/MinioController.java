@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/files")
+@RequestMapping("/api/files")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "File Management", description = "API pour la gestion des fichiers multimédias avec MinIO")
