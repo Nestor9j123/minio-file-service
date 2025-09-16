@@ -68,8 +68,21 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
 # Set JVM options optimized for Railway free tier (512MB RAM limit)
 ENV JAVA_OPTS="-Xms128m -Xmx400m -XX:+UseG1GC -XX:+UseContainerSupport"
 
+# Force cache bust for Railway - Version 2.0
+RUN echo "Railway deployment version 2.0 - $(date)" > /app/version.txt
+
 # Verify the JAR exists before running
 RUN ls -la app.jar
 
-# Run the application with Railway's PORT variable
-ENTRYPOINT ["sh", "-c", "echo 'Starting application with app.jar...' && ls -la app.jar && java $JAVA_OPTS -jar app.jar --server.port=${PORT:-8080}"]
+# Create startup script to ensure proper execution
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'echo "=== MinIO Service Startup ==="' >> /app/start.sh && \
+    echo 'echo "Working directory: $(pwd)"' >> /app/start.sh && \
+    echo 'echo "JAR file check:"' >> /app/start.sh && \
+    echo 'ls -la app.jar' >> /app/start.sh && \
+    echo 'echo "Starting Java application..."' >> /app/start.sh && \
+    echo 'exec java $JAVA_OPTS -jar app.jar --server.port=${PORT:-8080}' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Run the application using the startup script
+ENTRYPOINT ["/app/start.sh"]
