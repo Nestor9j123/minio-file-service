@@ -68,5 +68,8 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
 # Set JVM options optimized for Railway free tier (512MB RAM limit)
 ENV JAVA_OPTS="-Xms128m -Xmx400m -XX:+UseG1GC -XX:+UseContainerSupport"
 
+# Verify the JAR exists before running
+RUN ls -la app.jar
+
 # Run the application with Railway's PORT variable
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=${PORT:-8080}"]
+ENTRYPOINT ["sh", "-c", "echo 'Starting application with app.jar...' && ls -la app.jar && java $JAVA_OPTS -jar app.jar --server.port=${PORT:-8080}"]
