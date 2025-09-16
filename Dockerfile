@@ -14,6 +14,9 @@ COPY src ./src
 # Build the application
 RUN mvn clean package -DskipTests
 
+# List the target directory to debug
+RUN ls -la /app/target/
+
 # Production stage
 FROM eclipse-temurin:21-jre-alpine
 
@@ -33,8 +36,8 @@ WORKDIR /app
 RUN mkdir -p /app/logs && \
     chown -R appuser:appgroup /app
 
-# Copy the built JAR from build stage
-COPY --from=build /app/target/*.jar app.jar
+# Copy the built JAR from build stage with explicit name
+COPY --from=build /app/target/minio-0.0.1-SNAPSHOT.jar app.jar
 
 # Change ownership to appuser
 RUN chown appuser:appgroup app.jar
