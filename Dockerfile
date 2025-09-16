@@ -8,14 +8,24 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source code
+# Copy all necessary files
 COPY src ./src
+COPY mvnw ./
+COPY mvnw.cmd ./
+COPY .mvn ./.mvn
 
-# Build the application
-RUN mvn clean package -DskipTests
+# Make mvnw executable
+RUN chmod +x mvnw
+
+# Build the application with verbose output
+RUN mvn clean package -DskipTests -X
 
 # List the target directory to debug
 RUN ls -la /app/target/
+
+# Verify the JAR file exists and show its size
+RUN ls -la /app/target/*.jar || echo "No JAR files found!"
+RUN test -f /app/target/minio-0.0.1-SNAPSHOT.jar && echo "JAR found successfully!" || echo "JAR NOT FOUND!"
 
 # Production stage
 FROM eclipse-temurin:21-jre-alpine
@@ -36,8 +46,11 @@ WORKDIR /app
 RUN mkdir -p /app/logs && \
     chown -R appuser:appgroup /app
 
-# Copy the built JAR from build stage with explicit name
+# Copy the built JAR from build stage with fallback
 COPY --from=build /app/target/minio-0.0.1-SNAPSHOT.jar app.jar
+
+# Verify the JAR was copied successfully
+RUN ls -la app.jar && echo "JAR copied successfully to production stage!"
 
 # Change ownership to appuser
 RUN chown appuser:appgroup app.jar
