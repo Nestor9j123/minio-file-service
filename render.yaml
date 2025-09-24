@@ -1,0 +1,109 @@
+services:
+  # Service MinIO File Service
+  - type: web
+    name: minio-file-service
+    env: docker
+    dockerfilePath: ./Dockerfile.alpine
+    plan: starter # ou standard selon vos besoins
+    region: oregon # ou votre région préférée
+    branch: main
+    
+    # Configuration du build
+    buildCommand: ""
+    startCommand: ""
+    
+    # Variables d'environnement
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: 8080
+      - key: JAVA_OPTS
+        value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
+      
+      # Configuration MinIO (à personnaliser)
+      - key: MINIO_URL
+        value: https://your-minio-instance.com
+      - key: MINIO_ACCESS_KEY
+        fromSecret: MINIO_ACCESS_KEY
+      - key: MINIO_SECRET_KEY
+        fromSecret: MINIO_SECRET_KEY
+      
+      # Configuration des buckets
+      - key: MINIO_BUCKET_SONGS
+        value: minio-songs
+      - key: MINIO_BUCKET_IMAGES
+        value: minio-images
+      - key: MINIO_BUCKET_VIDEOS
+        value: minio-videos
+      - key: MINIO_BUCKET_PHOTOS
+        value: minio-photos
+      - key: MINIO_BUCKET_DOCUMENTS
+        value: minio-documents
+      - key: MINIO_BUCKET_ARCHIVES
+        value: minio-archives
+      - key: MINIO_BUCKET_FILES
+        value: minio-files
+      
+      # Configuration de la base de données (si nécessaire)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: minio-db
+          property: connectionString
+    
+    # Health check
+    healthCheckPath: /actuator/health
+    
+    # Disques persistants pour les données
+    disk:
+      name: minio-data
+      mountPath: /app/data
+      sizeGB: 10 # Ajustez selon vos besoins
+
+  # Base de données PostgreSQL pour les métadonnées (optionnel)
+  - type: pgsql
+    name: minio-db
+    plan: starter # ou standard
+    databaseName: minio_metadata
+    user: minio_user
+    region: oregon
+    
+    # Disque persistant pour la DB
+    disk:
+      sizeGB: 5
+
+  # Service MinIO séparé pour le stockage de fichiers
+  - type: web
+    name: minio-storage
+    env: docker
+    dockerCommand: |
+      docker run -p 9000:9000 -p 9001:9001 \
+        -v /opt/render/project/src/minio-data:/data \
+        -e MINIO_ROOT_USER=minioadmin \
+        -e MINIO_ROOT_PASSWORD=minioadmin123 \
+        minio/minio:RELEASE.2023-09-04T19-57-37Z \
+        server /data --console-address ":9001"
+    plan: starter
+    region: oregon
+    
+    # Variables d'environnement MinIO
+    envVars:
+      - key: MINIO_ROOT_USER
+        fromSecret: MINIO_ROOT_USER
+      - key: MINIO_ROOT_PASSWORD
+        fromSecret: MINIO_ROOT_PASSWORD
+      - key: MINIO_BROWSER_REDIRECT_URL
+        value: https://your-minio-console.onrender.com
+    
+    # Disque persistant pour MinIO
+    disk:
+      name: minio-storage-data
+      mountPath: /data
+      sizeGB: 20 # Ajustez selon vos besoins de stockage
+    
+    # Ports exposés
+    ports:
+      - port: 9000
+        protocol: tcp
+      - port: 9001
+        protocol: tcp

@@ -1,0 +1,66 @@
+# Multi-stage build pour optimiser la taille finale
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers de configuration Maven
+COPY pom.xml .
+COPY minio-client-sdk/pom.xml ./minio-client-sdk/
+
+# Télécharger les dépendances (mise en cache des layers)
+RUN mvn dependency:go-offline -B
+
+# Copier le code source
+COPY src ./src
+COPY minio-client-sdk/src ./minio-client-sdk/src
+
+# Construire l'application (skip tests pour accélérer le build)
+RUN mvn clean package -DskipTests -B
+
+# Stage final avec Alpine Linux pour une image minimale
+FROM eclipse-temurin:21-jre-alpine
+
+# Métadonnées de l'image
+LABEL maintainer="devnestor"
+LABEL description="MinIO File Service - Optimized for Render deployment"
+LABEL version="1.0.0"
+
+# Installer les dépendances système nécessaires
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    tzdata \
+    && rm -rf /var/cache/apk/*
+
+# Créer un utilisateur non-root pour la sécurité
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Créer les répertoires nécessaires
+RUN mkdir -p /app/data /app/logs && \
+    chown -R appuser:appgroup /app
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier le JAR depuis le stage builder
+COPY --from=builder /app/target/*.jar app.jar
+
+# Changer vers l'utilisateur non-root
+USER appuser
+
+# Exposer le port
+EXPOSE 8080
+
+# Variables d'environnement par défaut
+ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport" \
+    SPRING_PROFILES_ACTIVE=prod \
+    SERVER_PORT=8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# Point d'entrée optimisé
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

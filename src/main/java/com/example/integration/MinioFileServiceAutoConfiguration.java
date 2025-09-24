@@ -1,5 +1,6 @@
 package com.example.integration;
 
+// import com.fileservice.client.MinioFileClient;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,11 +20,13 @@ public class MinioFileServiceAutoConfiguration {
     private boolean enableMetrics = true;
     
     @Bean
-    public MinioFileClient minioFileClient() {
+    public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
         // Configuration du timeout, etc.
-        return new MinioFileClient(baseUrl, restTemplate);
+        return restTemplate;
     }
+    
+    // Note: MinioFileClient bean would be created when the SDK module is properly integrated
     
     // Getters/Setters pour les propriétés
     public String getBaseUrl() { return baseUrl; }

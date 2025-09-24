@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: minio-file-service-test
+  
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+      enabled: true
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+
+logging:
+  level:
+    minio.minio.minio: DEBUG
+    io.minio: WARN
+    org.springframework.web: WARN
+    org.springframework.test: WARN
+    org.testcontainers: WARN
+
+# MinIO Test Configuration
+minio:
+  url: http://localhost:9000
+  access-key: testuser
+  secret-key: testpassword
+  bucket:
+    songs: test-songs
+    images: test-images
+    videos: test-videos
+    photos: test-photos
+    documents: test-documents
+    archives: test-archives
+    files: test-files
+
+# Test-specific configurations
+test:
+  minio:
+    container:
+      image: minio/minio:RELEASE.2023-09-04T19-57-37Z
+      username: testuser
+      password: testpassword
+    timeout:
+      connection: 5000
+      read: 10000
+  
+  file:
+    test-data-path: src/test/resources/test-files/
+    max-test-file-size: 10MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

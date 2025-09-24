@@ -1,0 +1,118 @@
+spring:
+  application:
+    name: minio-file-service
+  
+  # Configuration du serveur
+  server:
+    port: ${SERVER_PORT:8080}
+    compression:
+      enabled: true
+      mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    http2:
+      enabled: true
+  
+  # Configuration multipart pour les gros fichiers
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+      enabled: true
+      file-size-threshold: 2KB
+      location: /tmp
+  
+  # Configuration JPA (si vous utilisez une base de données)
+  datasource:
+    url: ${DATABASE_URL:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+# Configuration MinIO pour production
+minio:
+  url: ${MINIO_URL:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin123}
+  bucket:
+    songs: ${MINIO_BUCKET_SONGS:minio-songs}
+    images: ${MINIO_BUCKET_IMAGES:minio-images}
+    videos: ${MINIO_BUCKET_VIDEOS:minio-videos}
+    photos: ${MINIO_BUCKET_PHOTOS:minio-photos}
+    documents: ${MINIO_BUCKET_DOCUMENTS:minio-documents}
+    archives: ${MINIO_BUCKET_ARCHIVES:minio-archives}
+    files: ${MINIO_BUCKET_FILES:minio-files}
+
+# Configuration des logs pour production
+logging:
+  level:
+    root: INFO
+    minio.minio.minio: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
+    io.minio: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/minio-file-service.log
+    max-size: 100MB
+    max-history: 10
+
+# Configuration Actuator pour monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+  health:
+    diskspace:
+      enabled: true
+      path: /app/data
+      threshold: 100MB
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Configuration Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  show-actuator: true
+
+# Configuration de sécurité
+server:
+  error:
+    include-stacktrace: never
+    include-message: always
+  forward-headers-strategy: native
+
+# Configuration des timeouts
+spring:
+  mvc:
+    async:
+      request-timeout: 300000 # 5 minutes pour les gros uploads
