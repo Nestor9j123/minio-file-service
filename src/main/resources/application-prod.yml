@@ -2,15 +2,6 @@ spring:
   application:
     name: minio-file-service
   
-  # Configuration du serveur
-  server:
-    port: ${SERVER_PORT:8080}
-    compression:
-      enabled: true
-      mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
-    http2:
-      enabled: true
-  
   # Configuration multipart pour les gros fichiers
   servlet:
     multipart:
@@ -20,29 +11,10 @@ spring:
       file-size-threshold: 2KB
       location: /tmp
   
-  # Configuration JPA (si vous utilisez une base de données)
-  datasource:
-    url: ${DATABASE_URL:}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 20000
-      idle-timeout: 300000
-      max-lifetime: 1200000
-  
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
-        jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
+  # Configuration des timeouts
+  mvc:
+    async:
+      request-timeout: 300000 # 5 minutes pour les gros uploads
 
 # Configuration MinIO pour production
 minio:
@@ -104,15 +76,15 @@ springdoc:
     enabled: true
   show-actuator: true
 
-# Configuration de sécurité
+# Configuration du serveur
 server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+  http2:
+    enabled: true
   error:
     include-stacktrace: never
     include-message: always
   forward-headers-strategy: native
-
-# Configuration des timeouts
-spring:
-  mvc:
-    async:
-      request-timeout: 300000 # 5 minutes pour les gros uploads
