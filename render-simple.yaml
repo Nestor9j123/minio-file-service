@@ -1,0 +1,87 @@
+services:
+  # Service MinIO File Service (Application principale)
+  - type: web
+    name: minio-file-service
+    env: docker
+    dockerfilePath: ./Dockerfile.alpine
+    plan: starter
+    region: oregon
+    branch: main
+    
+    # Variables d'environnement
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: 8080
+      - key: JAVA_OPTS
+        value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
+      
+      # Configuration MinIO
+      - key: MINIO_URL
+        value: https://minio-storage.onrender.com
+      - key: MINIO_ACCESS_KEY
+        fromSecret: MINIO_ACCESS_KEY
+      - key: MINIO_SECRET_KEY
+        fromSecret: MINIO_SECRET_KEY
+      
+      # Configuration des buckets (optionnel)
+      - key: MINIO_BUCKET_SONGS
+        value: minio-songs
+      - key: MINIO_BUCKET_IMAGES
+        value: minio-images
+      - key: MINIO_BUCKET_VIDEOS
+        value: minio-videos
+      - key: MINIO_BUCKET_PHOTOS
+        value: minio-photos
+      - key: MINIO_BUCKET_DOCUMENTS
+        value: minio-documents
+      - key: MINIO_BUCKET_ARCHIVES
+        value: minio-archives
+      - key: MINIO_BUCKET_FILES
+        value: minio-files
+    
+    # Health check
+    healthCheckPath: /actuator/health
+    
+    # Disque persistant pour les logs et cache temporaire
+    disk:
+      name: app-data
+      mountPath: /app/data
+      sizeGB: 5
+
+  # Service MinIO pour le stockage de fichiers
+  - type: web
+    name: minio-storage
+    env: docker
+    dockerCommand: |
+      docker run -p 9000:9000 -p 9001:9001 \
+        -v /opt/render/project/src/data:/data \
+        -e MINIO_ROOT_USER=$MINIO_ROOT_USER \
+        -e MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD \
+        minio/minio:RELEASE.2023-09-04T19-57-37Z \
+        server /data --console-address ":9001"
+    plan: starter
+    region: oregon
+    
+    # Variables d'environnement MinIO
+    envVars:
+      - key: MINIO_ROOT_USER
+        fromSecret: MINIO_ROOT_USER
+      - key: MINIO_ROOT_PASSWORD
+        fromSecret: MINIO_ROOT_PASSWORD
+      - key: MINIO_BROWSER_REDIRECT_URL
+        value: https://minio-storage.onrender.com
+    
+    # Disque persistant pour MinIO (IMPORTANT pour la persistance)
+    disk:
+      name: minio-data
+      mountPath: /data
+      sizeGB: 20
+    
+    # Ports exposés
+    ports:
+      - port: 9000
+        protocol: tcp
+      - port: 9001
+        protocol: tcp

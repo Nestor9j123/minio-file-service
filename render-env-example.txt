@@ -1,0 +1,60 @@
+# ========================================
+# VARIABLES D'ENVIRONNEMENT POUR RENDER
+# ========================================
+
+# 🔐 SECRETS OBLIGATOIRES (À configurer dans Render Dashboard)
+MINIO_ACCESS_KEY=minio_admin_2024
+MINIO_SECRET_KEY=SecureMinioPassword123!
+MINIO_ROOT_USER=admin
+MINIO_ROOT_PASSWORD=AdminPassword123!
+
+# 🌐 CONFIGURATION MINIO
+MINIO_URL=https://your-minio-storage.onrender.com
+
+# 🪣 BUCKETS (Optionnel - valeurs par défaut disponibles)
+MINIO_BUCKET_SONGS=prod-songs
+MINIO_BUCKET_IMAGES=prod-images
+MINIO_BUCKET_VIDEOS=prod-videos
+MINIO_BUCKET_PHOTOS=prod-photos
+MINIO_BUCKET_DOCUMENTS=prod-documents
+MINIO_BUCKET_ARCHIVES=prod-archives
+MINIO_BUCKET_FILES=prod-files
+
+# ⚙️ CONFIGURATION SPRING BOOT
+SPRING_PROFILES_ACTIVE=prod
+SERVER_PORT=8080
+
+# 🚀 OPTIMISATION JVM
+JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport
+
+# 🗄️ BASE DE DONNÉES (Si utilisée)
+DATABASE_URL=postgresql://user:password@host:5432/minio_db
+
+# 📊 MONITORING (Optionnel)
+MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus
+
+# ========================================
+# INSTRUCTIONS DE CONFIGURATION
+# ========================================
+
+# 1. Dans Render Dashboard → Environment Variables
+# 2. Ajouter chaque variable avec sa valeur
+# 3. Marquer comme "Secret" les variables sensibles :
+#    - MINIO_ACCESS_KEY
+#    - MINIO_SECRET_KEY  
+#    - MINIO_ROOT_USER
+#    - MINIO_ROOT_PASSWORD
+#    - DATABASE_URL
+
+# ========================================
+# GÉNÉRATION DE CLÉS SÉCURISÉES
+# ========================================
+
+# Pour générer des clés sécurisées :
+# MINIO_ACCESS_KEY : 8-20 caractères alphanumériques
+# MINIO_SECRET_KEY : Minimum 8 caractères, incluant majuscules, minuscules, chiffres, symboles
+
+# Exemples de clés sécurisées :
+# MINIO_ACCESS_KEY=MinioAdmin2024
+# MINIO_SECRET_KEY=Minio$ecure2024!
+# MINIO_ROOT_PASSWORD=RootP@ssw0rd2024
