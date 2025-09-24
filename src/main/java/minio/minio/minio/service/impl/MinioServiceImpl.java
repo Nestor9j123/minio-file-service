@@ -47,6 +47,12 @@ public class MinioServiceImpl implements MinioService {
     public void initializeBuckets() {
         log.info("Initializing MinIO buckets and configuring public access...");
         try {
+            // Vérifier la connectivité MinIO d'abord
+            if (!isMinioAvailable()) {
+                log.warn("MinIO server is not available at startup. Buckets will be created on first use.");
+                return;
+            }
+
             // Configurer l'accès public pour les buckets d'images et photos existants
             String imagesBucket = minioProperties.getBucket().getImages();
             String photosBucket = minioProperties.getBucket().getPhotos();
@@ -60,7 +66,21 @@ public class MinioServiceImpl implements MinioService {
 
             log.info("Successfully configured public access for image buckets");
         } catch (Exception e) {
-            log.error("Error initializing MinIO buckets: {}", e.getMessage(), e);
+            log.warn("MinIO buckets initialization failed: {}. Buckets will be created on first use.", e.getMessage());
+        }
+    }
+
+    /**
+     * Vérifie si le serveur MinIO est disponible
+     */
+    private boolean isMinioAvailable() {
+        try {
+            // Test simple de connectivité avec listBuckets
+            minioClient.listBuckets();
+            return true;
+        } catch (Exception e) {
+            log.debug("MinIO connectivity check failed: {}", e.getMessage());
+            return false;
         }
     }
 

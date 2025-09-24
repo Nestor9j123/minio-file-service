@@ -9,7 +9,11 @@ MINIO_ROOT_USER=admin
 MINIO_ROOT_PASSWORD=AdminPassword123!
 
 # 🌐 CONFIGURATION MINIO
-MINIO_URL=https://your-minio-storage.onrender.com
+# Option 1: Service MinIO de test (pour tests rapides)
+MINIO_URL=https://play.min.io:9000
+
+# Option 2: Votre service MinIO sur Render (production)
+# MINIO_URL=https://your-minio-storage.onrender.com
 
 # 🪣 BUCKETS (Optionnel - valeurs par défaut disponibles)
 MINIO_BUCKET_SONGS=prod-songs
