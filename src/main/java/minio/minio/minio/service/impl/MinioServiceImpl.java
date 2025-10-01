@@ -45,7 +45,7 @@ public class MinioServiceImpl implements MinioService {
 
     @PostConstruct
     public void initializeBuckets() {
-        log.info("Initializing MinIO buckets and configuring public access...");
+        log.info("Initializing ALL MinIO buckets and configuring public access...");
         try {
             // Vérifier la connectivité MinIO d'abord
             if (!isMinioAvailable()) {
@@ -53,18 +53,29 @@ public class MinioServiceImpl implements MinioService {
                 return;
             }
 
-            // Configurer l'accès public pour les buckets d'images et photos existants
-            String imagesBucket = minioProperties.getBucket().getImages();
-            String photosBucket = minioProperties.getBucket().getPhotos();
+            // Créer TOUS les buckets configurés
+            MinioProperties.Bucket bucket = minioProperties.getBucket();
+            String[] allBuckets = {
+                bucket.getSongs(),
+                bucket.getImages(), 
+                bucket.getVideos(),
+                bucket.getPhotos(),
+                bucket.getDocuments(),
+                bucket.getArchives(),
+                bucket.getFiles()
+            };
 
-            ensureBucketExists(imagesBucket);
-            ensureBucketExists(photosBucket);
+            // Créer chaque bucket et configurer l'accès public pour images/photos
+            for (String bucketName : allBuckets) {
+                ensureBucketExists(bucketName);
+                
+                // Configurer l'accès public pour les buckets d'images et photos
+                if (bucketName.equals(bucket.getImages()) || bucketName.equals(bucket.getPhotos())) {
+                    setBucketPublicReadAccess(bucketName);
+                }
+            }
 
-            // Forcer la configuration d'accès public même pour les buckets existants
-            setBucketPublicReadAccess(imagesBucket);
-            setBucketPublicReadAccess(photosBucket);
-
-            log.info("Successfully configured public access for image buckets");
+            log.info("Successfully initialized {} buckets: {}", allBuckets.length, String.join(", ", allBuckets));
         } catch (Exception e) {
             log.warn("MinIO buckets initialization failed: {}. Buckets will be created on first use.", e.getMessage());
         }
