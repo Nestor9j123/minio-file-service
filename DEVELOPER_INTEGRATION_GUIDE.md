@@ -60,14 +60,32 @@ Ce service MinIO File Management est une API REST complète pour la gestion de f
 - **Taille max** : 100MB
 - **Endpoint** : `/api/files/upload/FILE`
 
-## 🔧 Intégration API
+## 🔧 Intégration API - TOUS LES ENDPOINTS DISPONIBLES
 
-### 1. 📤 Upload de Fichier
+### 📋 **Liste Complète des 15 Endpoints API**
+
+| Endpoint | Méthode | Description | Exemple |
+|----------|---------|-------------|---------|
+| `/upload/{fileType}` | POST | Upload un fichier | Upload d'image |
+| `/upload/multiple/{fileType}` | POST | Upload plusieurs fichiers | Upload multiple |
+| `/download/{fileType}/{fileName}` | GET | Télécharger un fichier | Download avec attachment |
+| `/stream/{fileType}/{fileName}` | GET | Streamer un fichier | Stream pour lecture directe |
+| `/{fileType}/{fileName}` | DELETE | Supprimer un fichier | Suppression définitive |
+| `/metadata/{fileType}/{fileName}` | GET | Métadonnées d'un fichier | Infos détaillées |
+| `/list/{fileType}` | GET | Lister tous les fichiers | Liste par type |
+| `/exists/{fileType}/{fileName}` | GET | Vérifier l'existence | Check si fichier existe |
+| `/url/{fileType}/{fileName}` | GET | URL publique du fichier | URL directe |
+| `/presigned-url/{fileType}/{fileName}` | GET | URL présignée temporaire | Accès sécurisé temporaire |
+| `/pdf/thumbnail/{fileName}` | GET | Thumbnail PDF | Image de la 1ère page |
+| `/pdf/text/{fileName}` | GET | Extraire texte PDF | Contenu textuel |
+
+### 1. 📤 **Upload de Fichier Simple**
 
 ```bash
 curl -X POST "https://minio-file-service-6s7p.onrender.com/api/files/upload/IMAGE" \
   -H "Content-Type: multipart/form-data" \
-  -F "file=@mon-image.jpg"
+  -F "file=@mon-image.jpg" \
+  -F "customFileName=ma-belle-image"
 ```
 
 **Réponse :**
@@ -84,7 +102,92 @@ curl -X POST "https://minio-file-service-6s7p.onrender.com/api/files/upload/IMAG
 }
 ```
 
-### 2. 📋 Liste des Fichiers
+### 2. 📤 **Upload Multiple de Fichiers**
+
+```bash
+curl -X POST "https://minio-file-service-6s7p.onrender.com/api/files/upload/multiple/IMAGE" \
+  -F "files=@image1.jpg" \
+  -F "files=@image2.png" \
+  -F "files=@image3.gif"
+```
+
+**Réponse :**
+```json
+[
+  {
+    "fileName": "uuid1.jpg",
+    "originalFileName": "image1.jpg",
+    "fileUrl": "https://play.min.io/minio-images/uuid1.jpg",
+    "bucketName": "minio-images",
+    "fileSize": 1024567,
+    "contentType": "image/jpeg",
+    "uploadedAt": "2025-10-01T21:00:00.000Z",
+    "fileId": "unique-file-id-1"
+  },
+  {
+    "fileName": "uuid2.png",
+    "originalFileName": "image2.png",
+    "fileUrl": "https://play.min.io/minio-images/uuid2.png",
+    "bucketName": "minio-images",
+    "fileSize": 2048567,
+    "contentType": "image/png",
+    "uploadedAt": "2025-10-01T21:00:01.000Z",
+    "fileId": "unique-file-id-2"
+  }
+]
+```
+
+### 3. 📥 **Téléchargement de Fichier (Download)**
+
+```bash
+curl "https://minio-file-service-6s7p.onrender.com/api/files/download/IMAGE/uuid-generated-name.jpg" \
+  -o mon-fichier-telecharge.jpg
+```
+
+### 4. 🎵 **Streaming de Fichier (pour Audio/Vidéo)**
+
+```bash
+curl "https://minio-file-service-6s7p.onrender.com/api/files/stream/SONG/ma-chanson.mp3" \
+  --output - | mpv -
+```
+
+### 5. 🗑️ **Suppression de Fichier**
+
+```bash
+curl -X DELETE "https://minio-file-service-6s7p.onrender.com/api/files/IMAGE/uuid-generated-name.jpg"
+```
+
+**Réponse :**
+```text
+Fichier supprimé avec succès
+```
+
+### 6. 📊 **Métadonnées de Fichier**
+
+```bash
+curl "https://minio-file-service-6s7p.onrender.com/api/files/metadata/IMAGE/uuid-generated-name.jpg"
+```
+
+**Réponse :**
+```json
+{
+  "fileName": "uuid-generated-name.jpg",
+  "originalFileName": "mon-image.jpg",
+  "bucketName": "minio-images",
+  "fileSize": 1024567,
+  "contentType": "image/jpeg",
+  "createdAt": "2025-10-01T21:00:00.000",
+  "lastModified": "2025-10-01T21:00:00.000",
+  "etag": "\"file-etag-hash\"",
+  "width": 1920,
+  "height": 1080,
+  "colorSpace": "RGB",
+  "description": "Belle image de paysage",
+  "title": "Paysage montagnard"
+}
+```
+
+### 7. 📋 **Liste des Fichiers par Type**
 
 ```bash
 curl "https://minio-file-service-6s7p.onrender.com/api/files/list/IMAGE"
@@ -94,64 +197,746 @@ curl "https://minio-file-service-6s7p.onrender.com/api/files/list/IMAGE"
 ```json
 [
   {
-    "fileName": "uuid-generated-name.jpg",
-    "originalFileName": null,
+    "fileName": "uuid1.jpg",
+    "originalFileName": "image1.jpg",
     "bucketName": "minio-images",
     "fileSize": 1024567,
-    "contentType": null,
+    "contentType": "image/jpeg",
     "createdAt": "2025-10-01T21:00:00.000",
     "lastModified": "2025-10-01T21:00:00.000",
-    "etag": "\"file-etag-hash\"",
+    "etag": "\"hash1\"",
     "width": 1920,
-    "height": 1080,
-    "colorSpace": "RGB"
+    "height": 1080
+  },
+  {
+    "fileName": "uuid2.png",
+    "originalFileName": "image2.png",
+    "bucketName": "minio-images",
+    "fileSize": 2048567,
+    "contentType": "image/png",
+    "createdAt": "2025-10-01T21:01:00.000",
+    "lastModified": "2025-10-01T21:01:00.000",
+    "etag": "\"hash2\"",
+    "width": 1280,
+    "height": 720
   }
 ]
 ```
 
-### 3. 📥 Téléchargement de Fichier
+### 8. ✅ **Vérifier l'Existence d'un Fichier**
 
 ```bash
-curl "https://minio-file-service-6s7p.onrender.com/api/files/download/IMAGE/uuid-generated-name.jpg" \
-  -o mon-fichier-telecharge.jpg
-```
-
-### 4. 🔗 URL Présignée (Accès Temporaire)
-
-```bash
-curl "https://minio-file-service-6s7p.onrender.com/api/files/presigned-url/IMAGE/uuid-generated-name.jpg?expiry=3600"
+curl "https://minio-file-service-6s7p.onrender.com/api/files/exists/IMAGE/uuid-generated-name.jpg"
 ```
 
 **Réponse :**
 ```json
-{
-  "presignedUrl": "https://play.min.io/minio-images/uuid-generated-name.jpg?X-Amz-Algorithm=...",
-  "expiryTime": "2025-10-01T22:00:00.000Z"
+true
+```
+
+### 9. 🔗 **URL Publique du Fichier**
+
+```bash
+curl "https://minio-file-service-6s7p.onrender.com/api/files/url/IMAGE/uuid-generated-name.jpg"
+```
+
+**Réponse :**
+```text
+https://play.min.io/minio-images/uuid-generated-name.jpg
+```
+
+### 10. 🔐 **URL Présignée (Accès Temporaire Sécurisé)**
+
+```bash
+curl "https://minio-file-service-6s7p.onrender.com/api/files/presigned-url/IMAGE/uuid-generated-name.jpg?expiryMinutes=120"
+```
+
+**Réponse :**
+```text
+https://play.min.io/minio-images/uuid-generated-name.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...&X-Amz-Date=...&X-Amz-Expires=7200&X-Amz-SignedHeaders=host&X-Amz-Signature=...
+```
+
+### 11. 🖼️ **Génération de Thumbnail PDF**
+
+```bash
+curl "https://minio-file-service-6s7p.onrender.com/api/files/pdf/thumbnail/mon-document.pdf?width=300&height=400" \
+  -o thumbnail.png
+```
+
+### 12. 📄 **Extraction de Texte PDF**
+
+```bash
+curl "https://minio-file-service-6s7p.onrender.com/api/files/pdf/text/mon-document.pdf"
+```
+
+**Réponse :**
+```text
+Ceci est le contenu textuel extrait du fichier PDF.
+Il peut contenir plusieurs paragraphes et du formatage.
+Toutes les pages du PDF sont traitées.
+```
+
+## 🏗️ **EXEMPLE COMPLET DE CONTRÔLEUR SPRING BOOT**
+
+### 📝 **Contrôleur MinIO Complet avec Toutes les Fonctionnalités**
+
+```java
+package com.example.minio.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/files")
+@RequiredArgsConstructor
+@Slf4j
+@Tag(name = "File Management", description = "API pour la gestion des fichiers multimédias avec MinIO")
+public class MinioController {
+
+    private final MinioService minioService;
+    private final PdfProcessingService pdfProcessingService;
+
+    // ========== UPLOAD ENDPOINTS ==========
+    
+    @PostMapping(value = "/upload/{fileType}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload un fichier", description = "Upload un fichier vers MinIO selon le type spécifié")
+    @ApiResponse(responseCode = "200", description = "Fichier uploadé avec succès")
+    @ApiResponse(responseCode = "400", description = "Type de fichier invalide ou fichier corrompu")
+    public ResponseEntity<FileUploadResponse> uploadFile(
+            @Parameter(description = "Type de fichier (SONG, IMAGE, VIDEO, PHOTO, DOCUMENT, ARCHIVE, FILE)", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Fichier à uploader", required = true)
+            @RequestParam("file") MultipartFile file,
+            @Parameter(description = "Nom personnalisé pour le fichier (optionnel)")
+            @RequestParam(value = "customFileName", required = false) String customFileName) {
+        
+        log.info("Uploading file: {} of type: {}", file.getOriginalFilename(), fileType);
+        FileUploadResponse response = minioService.uploadFile(file, fileType, customFileName);
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping(value = "/upload/multiple/{fileType}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload plusieurs fichiers", description = "Upload plusieurs fichiers vers MinIO selon le type spécifié")
+    @ApiResponse(responseCode = "200", description = "Fichiers uploadés avec succès")
+    @ApiResponse(responseCode = "400", description = "Type de fichier invalide ou fichiers corrompus")
+    public ResponseEntity<List<FileUploadResponse>> uploadMultipleFiles(
+            @Parameter(description = "Type de fichier (SONG, IMAGE, VIDEO, PHOTO, DOCUMENT, ARCHIVE, FILE)", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Liste des fichiers à uploader", required = true)
+            @RequestParam("files") List<MultipartFile> files) {
+        
+        log.info("Uploading {} files of type: {}", files.size(), fileType);
+        List<FileUploadResponse> responses = minioService.uploadMultipleFiles(files, fileType);
+        return ResponseEntity.ok(responses);
+    }
+
+    // ========== DOWNLOAD & STREAM ENDPOINTS ==========
+
+    @GetMapping("/download/{fileType}/{fileName}")
+    @Operation(summary = "Télécharger un fichier", description = "Télécharge un fichier depuis MinIO")
+    @ApiResponse(responseCode = "200", description = "Fichier téléchargé avec succès")
+    @ApiResponse(responseCode = "404", description = "Fichier non trouvé")
+    public ResponseEntity<InputStreamResource> downloadFile(
+            @Parameter(description = "Type de fichier", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Nom du fichier", required = true)
+            @PathVariable String fileName) {
+        
+        log.info("Downloading file: {} of type: {}", fileName, fileType);
+        FileDownloadResponse response = minioService.downloadFile(fileName, fileType);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(response.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + response.getFileName() + "\"")
+                .contentLength(response.getFileSize())
+                .body(new InputStreamResource(response.getInputStream()));
+    }
+
+    @GetMapping("/stream/{fileType}/{fileName}")
+    @Operation(summary = "Streamer un fichier", description = "Streame un fichier depuis MinIO pour lecture directe")
+    @ApiResponse(responseCode = "200", description = "Fichier streamé avec succès")
+    @ApiResponse(responseCode = "404", description = "Fichier non trouvé")
+    public ResponseEntity<InputStreamResource> streamFile(
+            @Parameter(description = "Type de fichier", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Nom du fichier", required = true)
+            @PathVariable String fileName) {
+        
+        log.info("Streaming file: {} of type: {}", fileName, fileType);
+        FileDownloadResponse response = minioService.downloadFile(fileName, fileType);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(response.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + response.getFileName() + "\"")
+                .contentLength(response.getFileSize())
+                .body(new InputStreamResource(response.getInputStream()));
+    }
+
+    // ========== FILE MANAGEMENT ENDPOINTS ==========
+
+    @DeleteMapping("/{fileType}/{fileName}")
+    @Operation(summary = "Supprimer un fichier", description = "Supprime un fichier de MinIO")
+    @ApiResponse(responseCode = "200", description = "Fichier supprimé avec succès")
+    @ApiResponse(responseCode = "404", description = "Fichier non trouvé")
+    public ResponseEntity<String> deleteFile(
+            @Parameter(description = "Type de fichier", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Nom du fichier", required = true)
+            @PathVariable String fileName) {
+        
+        log.info("Deleting file: {} of type: {}", fileName, fileType);
+        boolean deleted = minioService.deleteFile(fileName, fileType);
+        
+        if (deleted) {
+            return ResponseEntity.ok("Fichier supprimé avec succès");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/metadata/{fileType}/{fileName}")
+    @Operation(summary = "Obtenir les métadonnées d'un fichier", description = "Récupère les métadonnées d'un fichier")
+    @ApiResponse(responseCode = "200", description = "Métadonnées récupérées avec succès")
+    @ApiResponse(responseCode = "404", description = "Fichier non trouvé")
+    public ResponseEntity<FileMetadata> getFileMetadata(
+            @Parameter(description = "Type de fichier", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Nom du fichier", required = true)
+            @PathVariable String fileName) {
+        
+        log.info("Getting metadata for file: {} of type: {}", fileName, fileType);
+        FileMetadata metadata = minioService.getFileMetadata(fileName, fileType);
+        return ResponseEntity.ok(metadata);
+    }
+
+    @GetMapping("/list/{fileType}")
+    @Operation(summary = "Lister les fichiers", description = "Liste tous les fichiers d'un type donné")
+    @ApiResponse(responseCode = "200", description = "Liste des fichiers récupérée avec succès")
+    public ResponseEntity<List<FileMetadata>> listFiles(
+            @Parameter(description = "Type de fichier", required = true)
+            @PathVariable FileType fileType) {
+        
+        log.info("Listing files of type: {}", fileType);
+        List<FileMetadata> files = minioService.listFiles(fileType);
+        return ResponseEntity.ok(files);
+    }
+
+    @GetMapping("/exists/{fileType}/{fileName}")
+    @Operation(summary = "Vérifier l'existence d'un fichier", description = "Vérifie si un fichier existe dans MinIO")
+    @ApiResponse(responseCode = "200", description = "Vérification effectuée avec succès")
+    public ResponseEntity<Boolean> fileExists(
+            @Parameter(description = "Type de fichier", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Nom du fichier", required = true)
+            @PathVariable String fileName) {
+        
+        log.info("Checking existence of file: {} of type: {}", fileName, fileType);
+        boolean exists = minioService.fileExists(fileName, fileType);
+        return ResponseEntity.ok(exists);
+    }
+
+    // ========== URL ENDPOINTS ==========
+
+    @GetMapping("/url/{fileType}/{fileName}")
+    @Operation(summary = "Obtenir l'URL d'un fichier", description = "Récupère l'URL publique d'un fichier")
+    @ApiResponse(responseCode = "200", description = "URL récupérée avec succès")
+    @ApiResponse(responseCode = "404", description = "Fichier non trouvé")
+    public ResponseEntity<String> getFileUrl(
+            @Parameter(description = "Type de fichier", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Nom du fichier", required = true)
+            @PathVariable String fileName) {
+        
+        log.info("Getting URL for file: {} of type: {}", fileName, fileType);
+        String url = minioService.getFileUrl(fileName, fileType);
+        return ResponseEntity.ok(url);
+    }
+
+    @GetMapping("/presigned-url/{fileType}/{fileName}")
+    @Operation(summary = "Générer une URL pré-signée", description = "Génère une URL pré-signée temporaire pour accéder au fichier")
+    @ApiResponse(responseCode = "200", description = "URL pré-signée générée avec succès")
+    @ApiResponse(responseCode = "404", description = "Fichier non trouvé")
+    public ResponseEntity<String> getPresignedUrl(
+            @Parameter(description = "Type de fichier", required = true)
+            @PathVariable FileType fileType,
+            @Parameter(description = "Nom du fichier", required = true)
+            @PathVariable String fileName,
+            @Parameter(description = "Durée d'expiration en minutes")
+            @RequestParam(value = "expiryMinutes", defaultValue = "60") int expiryMinutes) {
+        
+        log.info("Generating presigned URL for file: {} of type: {}, expiry: {} minutes", fileName, fileType, expiryMinutes);
+        String presignedUrl = minioService.getPresignedUrl(fileName, fileType, expiryMinutes);
+        return ResponseEntity.ok(presignedUrl);
+    }
+
+    // ========== PDF PROCESSING ENDPOINTS ==========
+
+    @GetMapping("/pdf/thumbnail/{fileName}")
+    @Operation(summary = "Générer un thumbnail PDF", description = "Génère une image thumbnail de la première page d'un PDF")
+    @ApiResponse(responseCode = "200", description = "Thumbnail généré avec succès")
+    @ApiResponse(responseCode = "404", description = "Fichier PDF non trouvé")
+    @ApiResponse(responseCode = "400", description = "Le fichier n'est pas un PDF valide")
+    public ResponseEntity<byte[]> generatePdfThumbnail(
+            @Parameter(description = "Nom du fichier PDF", required = true)
+            @PathVariable String fileName,
+            @Parameter(description = "Largeur du thumbnail")
+            @RequestParam(value = "width", defaultValue = "200") int width,
+            @Parameter(description = "Hauteur du thumbnail")
+            @RequestParam(value = "height", defaultValue = "200") int height) {
+        
+        log.info("Generating PDF thumbnail for file: {}, size: {}x{}", fileName, width, height);
+        
+        try {
+            byte[] fileContent = minioService.getFileContentAsBytes(fileName, FileType.DOCUMENT);
+            byte[] thumbnail = pdfProcessingService.generatePdfThumbnail(
+                new java.io.ByteArrayInputStream(fileContent), width, height);
+            
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "_thumbnail.png\"")
+                    .body(thumbnail);
+                    
+        } catch (Exception e) {
+            log.error("Error generating PDF thumbnail for {}: {}", fileName, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/pdf/text/{fileName}")
+    @Operation(summary = "Extraire le texte d'un PDF", description = "Extrait tout le texte contenu dans un fichier PDF")
+    @ApiResponse(responseCode = "200", description = "Texte extrait avec succès")
+    @ApiResponse(responseCode = "404", description = "Fichier PDF non trouvé")
+    @ApiResponse(responseCode = "400", description = "Le fichier n'est pas un PDF valide")
+    public ResponseEntity<String> extractPdfText(
+            @Parameter(description = "Nom du fichier PDF", required = true)
+            @PathVariable String fileName) {
+        
+        log.info("Extracting text from PDF file: {}", fileName);
+        
+        try {
+            byte[] fileContent = minioService.getFileContentAsBytes(fileName, FileType.DOCUMENT);
+            String text = pdfProcessingService.extractTextFromPdf(
+                new java.io.ByteArrayInputStream(fileContent));
+            
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(text);
+                    
+        } catch (Exception e) {
+            log.error("Error extracting text from PDF {}: {}", fileName, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
 ```
 
-### 5. 📊 Métadonnées de Fichier
+### 🔧 **Configuration Spring Boot Requise**
 
-```bash
-curl "https://minio-file-service-6s7p.onrender.com/api/files/metadata/IMAGE/uuid-generated-name.jpg"
+#### 1. **Dependencies Maven (pom.xml)**
+
+```xml
+<dependencies>
+    <!-- Spring Boot Starters -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    
+    <!-- MinIO Client -->
+    <dependency>
+        <groupId>io.minio</groupId>
+        <artifactId>minio</artifactId>
+        <version>8.5.7</version>
+    </dependency>
+    
+    <!-- Swagger/OpenAPI Documentation -->
+    <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        <version>2.0.4</version>
+    </dependency>
+    
+    <!-- Lombok pour réduire le boilerplate -->
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <optional>true</optional>
+    </dependency>
+    
+    <!-- PDF Processing -->
+    <dependency>
+        <groupId>org.apache.pdfbox</groupId>
+        <artifactId>pdfbox</artifactId>
+        <version>3.0.0</version>
+    </dependency>
+</dependencies>
 ```
 
-### 6. 🗑️ Suppression de Fichier
+#### 2. **Configuration Application (application.yml)**
 
-```bash
-curl -X DELETE "https://minio-file-service-6s7p.onrender.com/api/files/delete/IMAGE/uuid-generated-name.jpg"
+```yaml
+# Configuration MinIO
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin123}
+  buckets:
+    songs: ${MINIO_BUCKET_SONGS:minio-songs}
+    images: ${MINIO_BUCKET_IMAGES:minio-images}
+    videos: ${MINIO_BUCKET_VIDEOS:minio-videos}
+    photos: ${MINIO_BUCKET_PHOTOS:minio-photos}
+    documents: ${MINIO_BUCKET_DOCUMENTS:minio-documents}
+    archives: ${MINIO_BUCKET_ARCHIVES:minio-archives}
+    files: ${MINIO_BUCKET_FILES:minio-files}
+
+# Configuration Spring Boot
+spring:
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  application:
+    name: minio-file-service
+
+# Configuration Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
 ```
 
-## 🎨 Intégration Frontend
+#### 3. **Enum FileType**
 
-### JavaScript/TypeScript
+```java
+package com.example.minio.enums;
+
+public enum FileType {
+    SONG,       // Fichiers audio (mp3, wav, flac, etc.)
+    IMAGE,      // Images (jpg, png, gif, etc.)
+    VIDEO,      // Vidéos (mp4, avi, mkv, etc.)
+    PHOTO,      // Photos (même format que IMAGE mais bucket séparé)
+    DOCUMENT,   // Documents (pdf, doc, txt, etc.)
+    ARCHIVE,    // Archives (zip, rar, 7z, etc.)
+    FILE        // Fichiers génériques
+}
+```
+
+#### 4. **DTOs (Data Transfer Objects)**
+
+```java
+// FileUploadResponse.java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class FileUploadResponse {
+    private String fileName;
+    private String originalFileName;
+    private String fileUrl;
+    private String bucketName;
+    private long fileSize;
+    private String contentType;
+    private LocalDateTime uploadedAt;
+    private String fileId;
+}
+
+// FileMetadata.java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class FileMetadata {
+    private String fileName;
+    private String originalFileName;
+    private String bucketName;
+    private long fileSize;
+    private String contentType;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastModified;
+    private String etag;
+    private Integer width;
+    private Integer height;
+    private String colorSpace;
+    private String description;
+    private String title;
+}
+
+// FileDownloadResponse.java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class FileDownloadResponse {
+    private String fileName;
+    private String contentType;
+    private long fileSize;
+    private InputStream inputStream;
+}
+```
+
+## 🚀 **COMMENT UTILISER L'API MINIO FILE SERVICE**
+
+> **✅ Service déjà déployé sur :** `https://minio-file-service-6s7p.onrender.com`
+
+### 📋 **Méthodes Disponibles - Guide Rapide**
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| **Upload** | `POST /api/files/upload/{fileType}` | Upload un fichier |
+| **Upload Multiple** | `POST /api/files/upload/multiple/{fileType}` | Upload plusieurs fichiers |
+| **Download** | `GET /api/files/download/{fileType}/{fileName}` | Télécharger un fichier |
+| **Stream** | `GET /api/files/stream/{fileType}/{fileName}` | Streamer un fichier |
+| **Delete** | `DELETE /api/files/{fileType}/{fileName}` | Supprimer un fichier |
+| **List** | `GET /api/files/list/{fileType}` | Lister les fichiers |
+| **Metadata** | `GET /api/files/metadata/{fileType}/{fileName}` | Métadonnées d'un fichier |
+| **Exists** | `GET /api/files/exists/{fileType}/{fileName}` | Vérifier l'existence |
+| **URL** | `GET /api/files/url/{fileType}/{fileName}` | URL publique |
+| **Presigned URL** | `GET /api/files/presigned-url/{fileType}/{fileName}` | URL temporaire sécurisée |
+| **PDF Thumbnail** | `GET /api/files/pdf/thumbnail/{fileName}` | Thumbnail PDF |
+| **PDF Text** | `GET /api/files/pdf/text/{fileName}` | Extraire texte PDF |
+
+### 🎯 **Intégration Spring Boot Simple**
+
+```java
+@RestController
+@RequestMapping("/api/mon-app")
+public class MonController {
+
+    private final String API_BASE = "https://minio-file-service-6s7p.onrender.com/api/files";
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    // ========== UPLOAD ==========
+    
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", file.getResource());
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        
+        return restTemplate.postForEntity(API_BASE + "/upload/IMAGE", requestEntity, Object.class);
+    }
+
+    // ========== LIST FILES ==========
+    
+    @GetMapping("/images")
+    public ResponseEntity<?> listImages() {
+        return restTemplate.getForEntity(API_BASE + "/list/IMAGE", Object.class);
+    }
+
+    // ========== DELETE ==========
+    
+    @DeleteMapping("/delete/{fileName}")
+    public ResponseEntity<?> deleteFile(@PathVariable String fileName) {
+        restTemplate.delete(API_BASE + "/IMAGE/" + fileName);
+        return ResponseEntity.ok("Fichier supprimé");
+    }
+
+    // ========== GET URL ==========
+    
+    @GetMapping("/url/{fileName}")
+    public ResponseEntity<String> getFileUrl(@PathVariable String fileName) {
+        return restTemplate.getForEntity(API_BASE + "/url/IMAGE/" + fileName, String.class);
+    }
+}
+```
+
+### 🌐 **Intégration JavaScript/React Simple**
 
 ```javascript
-// Upload de fichier
-async function uploadFile(file, fileType) {
+// Configuration de base
+const API_BASE = 'https://minio-file-service-6s7p.onrender.com/api/files';
+
+// ========== UPLOAD ==========
+async function uploadFile(file, fileType = 'IMAGE') {
   const formData = new FormData();
   formData.append('file', file);
   
+  const response = await fetch(`${API_BASE}/upload/${fileType}`, {
+    method: 'POST',
+    body: formData
+  });
+  
+  return await response.json();
+}
+
+// ========== LIST FILES ==========
+async function listFiles(fileType = 'IMAGE') {
+  const response = await fetch(`${API_BASE}/list/${fileType}`);
+  return await response.json();
+}
+
+// ========== DELETE ==========
+async function deleteFile(fileName, fileType = 'IMAGE') {
+  const response = await fetch(`${API_BASE}/${fileType}/${fileName}`, {
+    method: 'DELETE'
+  });
+  return response.ok;
+}
+
+// ========== GET URL ==========
+async function getFileUrl(fileName, fileType = 'IMAGE') {
+  const response = await fetch(`${API_BASE}/url/${fileType}/${fileName}`);
+  return await response.text();
+}
+
+// ========== PRESIGNED URL ==========
+async function getPresignedUrl(fileName, fileType = 'IMAGE', expiryMinutes = 60) {
+  const response = await fetch(`${API_BASE}/presigned-url/${fileType}/${fileName}?expiryMinutes=${expiryMinutes}`);
+  return await response.text();
+}
+```
+
+### ⚡ **Exemple React Component**
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+const FileManager = () => {
+  const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
+  // Charger la liste des fichiers
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
+  const loadFiles = async () => {
+    try {
+      const fileList = await listFiles('IMAGE');
+      setFiles(fileList);
+    } catch (error) {
+      console.error('Erreur chargement fichiers:', error);
+    }
+  };
+
+  const handleUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const result = await uploadFile(file, 'IMAGE');
+      console.log('Upload réussi:', result);
+      loadFiles(); // Recharger la liste
+    } catch (error) {
+      console.error('Erreur upload:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (fileName) => {
+    try {
+      await deleteFile(fileName, 'IMAGE');
+      loadFiles(); // Recharger la liste
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Gestionnaire de Fichiers</h2>
+      
+      {/* Upload */}
+      <input 
+        type="file" 
+        onChange={handleUpload} 
+        disabled={uploading}
+        accept="image/*"
+      />
+      {uploading && <p>Upload en cours...</p>}
+      
+      {/* Liste des fichiers */}
+      <div>
+        <h3>Fichiers ({files.length})</h3>
+        {files.map(file => (
+          <div key={file.fileName} style={{border: '1px solid #ccc', margin: '10px', padding: '10px'}}>
+            <p><strong>{file.fileName}</strong></p>
+            <p>Taille: {(file.fileSize / 1024).toFixed(2)} KB</p>
+            <p>Créé: {new Date(file.createdAt).toLocaleDateString()}</p>
+            <button onClick={() => handleDelete(file.fileName)}>
+              Supprimer
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default FileManager;
+```
+
+## 🎯 **Types de Fichiers Supportés**
+
+```javascript
+const FILE_TYPES = {
+  SONG: 'SONG',       // Audio: mp3, wav, flac
+  IMAGE: 'IMAGE',     // Images: jpg, png, gif
+  VIDEO: 'VIDEO',     // Vidéos: mp4, avi, mkv
+  PHOTO: 'PHOTO',     // Photos (bucket séparé)
+  DOCUMENT: 'DOCUMENT', // Documents: pdf, doc, txt
+  ARCHIVE: 'ARCHIVE', // Archives: zip, rar, 7z
+  FILE: 'FILE'        // Fichiers génériques
+};
+
+// Exemple d'usage
+await uploadFile(monFichier, FILE_TYPES.VIDEO);
+await listFiles(FILE_TYPES.DOCUMENT);
+```
+
+## ✅ **Résumé - Ce dont vous avez besoin**
+
+### 🔗 **URL de l'API déployée**
+```
+https://minio-file-service-6s7p.onrender.com
+```
+
+### 📋 **Endpoints principaux**
+- `POST /api/files/upload/{fileType}` - Upload
+- `GET /api/files/list/{fileType}` - Liste
+- `DELETE /api/files/{fileType}/{fileName}` - Suppression
+- `GET /api/files/url/{fileType}/{fileName}` - URL publique
+
+### 🎯 **Types de fichiers**
+`SONG`, `IMAGE`, `VIDEO`, `PHOTO`, `DOCUMENT`, `ARCHIVE`, `FILE`
+
+### 💡 **Exemple minimal**
+```javascript
+// Upload
+const formData = new FormData();
+formData.append('file', monFichier);
+fetch('https://minio-file-service-6s7p.onrender.com/api/files/upload/IMAGE', {
+  method: 'POST',
+  body: formData
+});
+
+// Liste
+fetch('https://minio-file-service-6s7p.onrender.com/api/files/list/IMAGE')
+  .then(r => r.json())
+  .then(files => console.log(files));
+```
+
+**🚀 C'est tout ! Le service est prêt à l'emploi !**
   const response = await fetch(`https://minio-file-service-6s7p.onrender.com/api/files/upload/${fileType}`, {
     method: 'POST',
     body: formData
