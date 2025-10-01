@@ -3,6 +3,8 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "java -jar app.jar"
+    "startCommand": "/app/start.sh",
+    "healthcheckPath": "/actuator/health",
+    "healthcheckTimeout": 300
   }
 }
