@@ -33,7 +33,7 @@ public class OpenApiConfig {
                                 .url("https://opensource.org/licenses/MIT")))
                 .servers(List.of(
                         new Server()
-                                .url("https://minio-file-service.onrender.com")
+                                .url("https://minio-file-service-6s7p.onrender.com")
                                 .description("Production Server (Render)"),
                         new Server()
                                 .url("http://localhost:" + serverPort)

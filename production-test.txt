@@ -1,0 +1,1 @@
+Test file for production MinIO service deployment
